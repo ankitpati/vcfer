@@ -4,17 +4,22 @@
 
 char *bingetlin(FILE * fp) /* fp MUST be opened as binary */
 {
-    static int newl = 0;
+    static char *newl = NULL;
     static FILE *oldf = NULL;
     int c;
     char *s;
     size_t n;
     fpos_t pos;
 
-    if (!fp) return (char *) newl;
+    if (!newl) {
+        if (!(newl = malloc(sizeof(*newl)))) return NULL;
+        *newl = '\0';
+    }
+
+    if (!fp) return newl;
 
     if (oldf != fp) {
-        newl = 0;
+        newl = NULL;
         oldf = fp;
     }
 
@@ -29,14 +34,14 @@ char *bingetlin(FILE * fp) /* fp MUST be opened as binary */
 
         switch (c) {
         case '\n':
-            newl = 1;       /* Unix newline */
+            *newl = '\n';       /* Unix newline */
             break;
         case '\r':
             fgetpos(fp, &pos);
             if (getc(fp) == '\n')
-                newl = 2;   /* Windows newline */
+                *newl = 'W';    /* Windows newline */
             else {
-                newl = 3;   /* Mac newline */
+                *newl = '\r';   /* Mac newline */
                 fsetpos(fp, &pos);
             }
             break;
@@ -45,12 +50,12 @@ char *bingetlin(FILE * fp) /* fp MUST be opened as binary */
     else {
         for (
             n = 0;
-            (c = getc(fp)) != (newl == 1 ? '\n' : '\r') && !feof(fp)
+            (c = getc(fp)) != (*newl == '\n' ? '\n' : '\r') && !feof(fp)
                 && !ferror(fp);
             s[n++] = c
         ) if (!(s = realloc(s, sizeof(*s) * (n + 2)))) return NULL;
 
-        if (newl == 2) getc(fp);
+        if (*newl == 'W') getc(fp);
     }
 
     s[n] = '\0';
@@ -59,24 +64,24 @@ char *bingetlin(FILE * fp) /* fp MUST be opened as binary */
 
 int binputlin(FILE * fp, char *lin)
 {
-    int newl;
-    newl = (int) bingetlin(NULL);  /* retrieves newline info from bingetlin */
+    char newl;
+    newl = *bingetlin(NULL);  /* retrieves newline info from bingetlin */
 
     while (!ferror(fp)) {
         switch (*lin) {
         case '\n':
             switch (newl) {
-            case 0:        /* intended fall-through */
-            case 1:
+            case '\0':        /* intended fall-through */
+            case '\n':
                 fputc(*lin++, fp);
                 break;
 
-            case 2:
+            case 'W':
                 fputc('\r', fp);
                 fputc(*lin++, fp);
                 break;
 
-            case 3:
+            case '\r':
                 fputc('\r', fp);
                 lin++;
                 break;
