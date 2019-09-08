@@ -11,21 +11,18 @@ char *bingetlin(FILE * fp) /* fp MUST be opened as binary */
     size_t n;
     fpos_t pos;
 
-    if (!newl) {
-        if (!(newl = malloc(sizeof(*newl)))) return NULL;
-        *newl = '\0';
-    }
+    if (!newl && !(newl = malloc(sizeof(*newl)))) return NULL;
 
     if (!fp) return newl;
 
     if (oldf != fp) {
-        newl = NULL;
+        *newl = '\0';
         oldf = fp;
     }
 
     if (!(s = malloc(sizeof(*s)))) return NULL;
 
-    if (!newl) {
+    if (!*newl) {
         for (
             n = 0;
             (c = getc(fp)) != '\n' && c != '\r' && !feof(fp) && !ferror(fp);
