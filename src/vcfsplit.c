@@ -165,8 +165,7 @@ int main(int argc, char **argv)
 
         while ((lin = bingetlin(fin)) && strcmp(lin, "END:VCARD")) {
             if (lin[0] == 'P' && lin[1] == 'H' && lin[2] == 'O' &&
-                lin[3] == 'T' && lin[4] == 'O') {
-
+                                 lin[3] == 'T' && lin[4] == 'O') {
                 free(lin);
                 while ((lin = bingetlin(fin)) && *lin) free(lin);
                 if (lin) free(lin);
