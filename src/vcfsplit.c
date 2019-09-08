@@ -108,26 +108,12 @@ int main(int argc, char **argv)
     char *out, *lin;
     FILE *fin, *fout;
 
-    switch (argc) {
-    case 1:
-        printf("Enter input filename:\n");
-        if (!(out = bingetlin(stdin))) goto alocerr;
-
-        if (!(fin = fopen(out, "rb"))) goto ioerr;
-        free(out);
-
-        break;
-
-    case 2:
-        if (!(fin = fopen(argv[1], "rb"))) goto ioerr;
-        break;
-
-    default:
-        fprintf(stderr,
-                "Incorrect usage!\nCorrect usage: vcfsplit <filename>\n");
+    if (argc != 2) {
+        fprintf(stderr, "Usage:\n\tvcfsplit <filename>\n");
         return 1;
-        break;
     }
+
+    if (!(fin = fopen(argv[1], "rb"))) goto ioerr;
 
     while (!feof(fin) && !ferror(fin)) {
         if (!(fout = fopen("vcfsplit.tmp", "wb"))) goto ioerr;
